@@ -20,29 +20,30 @@ char	*ft_mini_split(char *buffer)
 	size_t	i;
 	size_t	j;
 
-	i = 1;
+	i = 0;
 	j = 0;
 	pos_start_buffer = buffer;
 	pos_nline = ft_strchr(buffer, '\n');
 	while (buffer++ != pos_nline)
 		i++;
-	split_buffer = malloc(++i);
-	split_buffer[i--] = '\0';
-	while (j < i)
+	split_buffer = malloc(i + 2);
+	while (j <= i)
 	{
-		split_buffer[j] = *pos_start_buffer++;
+		split_buffer[j] = *pos_start_buffer;
+		pos_start_buffer++;
 		j++;
 	}
+	split_buffer[j] = '\0';
 	return (split_buffer);
 }
 
-int	ft_current_line(char *buffer, char **buffered)
+int	ft_current_line(char *buffer, char **buffered, char **saved)
 {
 	char	*buffered_temp;
 	char	*split_temp;
-	int		bool;
+	int		boolcl;
 
-	bool = 0;
+	boolcl = 0;
 	buffered_temp = ft_strdup(*buffered);
 	free(*buffered);
 	if (ft_strchr(buffer, '\n') == NULL)
@@ -50,11 +51,25 @@ int	ft_current_line(char *buffer, char **buffered)
 	else
 	{
 		split_temp = ft_mini_split(buffer);
+		*saved = ft_strdup(ft_strchr(buffer, '\n') + 1);
 		*buffered = ft_strjoin(buffered_temp, split_temp);
-		bool = 1;
+		free(split_temp);
+		boolcl = 1;
 	}
 	free(buffered_temp);
-	return (bool);
+	return (boolcl);
+}
+
+void	ft_strjoin_saved(char **saved, char **buffer)
+{
+	char	*buffer_temp;
+
+	buffer_temp = ft_strdup(*buffer);
+	free(*buffer);
+	*buffer = ft_strjoin(*saved, buffer_temp);
+	free(*saved);
+	free(buffer_temp);
+	*saved = NULL;
 }
 
 char	*get_next_line(int fd)
@@ -66,12 +81,22 @@ char	*get_next_line(int fd)
 	buffered = ft_strdup("");
 	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	buffer = malloc(BUFFER_SIZE + 1);
+	buffer = ft_memset(malloc(BUFFER_SIZE + 1), 0, BUFFER_SIZE + 1);
 	if (buffer == NULL)
 		return (NULL);
 	while (read(fd, buffer, BUFFER_SIZE) != 0)
-		if (ft_current_line(buffer, &buffered))
-			break ;
+	{
+		if (saved != NULL)
+			ft_strjoin_saved(&saved, &buffer);
+		if (ft_current_line(buffer, &buffered, &saved))
+		{
+			free(buffer);
+			return (buffered);
+		}
+	}
+	free(saved);
+	saved = NULL;
 	free(buffer);
-	return (buffered);
+	free(buffered);
+	return (NULL);
 }

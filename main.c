@@ -27,8 +27,8 @@ int	main(void)
 {
 	char	*str;
 	int		fd;
-	char	*res_expected1 = "Parabens pra voce\n";
-	char	*res_expected2 = "Nesta data querida\n";
+	char	*res_expected1 = "10987654\n";
+	char	*res_expected2 = "98765432\n";
 	size_t	i;
 
 	fd = open("text", O_RDONLY);
@@ -41,6 +41,7 @@ int	main(void)
 	{
 		printf("Retorno NÃO esperado: '%s' != '%s'\n", str, res_expected1);
 	}
+	free(str);
 /*	str = get_next_line(fd);
 	if (!(ft_strcmp(str, res_expected2)))
 	{
@@ -50,6 +51,9 @@ int	main(void)
 	{
 		printf("Retorno NÃO esperado: '%s' != '%s'\n", str, res_expected2);
 	}*/
+	str = get_next_line(fd);
+	if (!str)
+		printf("TERMINOU\n");
 	close(fd);
 	return (0);
 }

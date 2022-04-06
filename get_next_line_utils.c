@@ -87,3 +87,16 @@ char	*ft_strchr(const char *str, int c)
 	}
 	return (0);
 }
+
+void	*ft_memset(void *str, int c, size_t len)
+{
+	size_t	cont;
+
+	cont = 0;
+	while (cont < len)
+	{
+		((unsigned char *)str)[cont] = c;
+		cont++;
+	}
+	return (str);
+}
