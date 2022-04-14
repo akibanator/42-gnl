@@ -16,7 +16,6 @@
 # include <unistd.h>
 # include <stdlib.h>
 # include <string.h>
-# include <stdio.h> // REMOVER DEPOIS
 
 char	*get_next_line(int fd);
 char	*ft_strchr(const char *str, int c);

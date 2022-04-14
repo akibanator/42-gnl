@@ -12,91 +12,107 @@
 
 #include	"get_next_line.h"
 
-char	*ft_mini_split(char *buffer)
+char	*ft_split_nline(char *current_buffer, char **has_nline)
 {
-	char	*split_buffer;
-	char	*pos_nline;
-	char	*pos_start_buffer;
-	size_t	i;
-	size_t	j;
+	char	*ret_str;
+	int		i;
 
 	i = 0;
-	j = 0;
-	pos_start_buffer = buffer;
-	pos_nline = ft_strchr(buffer, '\n');
-	while (buffer++ != pos_nline)
+	while (current_buffer++ != *has_nline)
 		i++;
-	split_buffer = malloc(i + 2);
-	while (j <= i)
+	ret_str = malloc(i + 2);
+	ret_str[i + 1] = '\0';
+	while (i >= 0)
 	{
-		split_buffer[j] = *pos_start_buffer;
-		pos_start_buffer++;
-		j++;
+		current_buffer--;
+		ret_str[i] = *current_buffer;
+		i--;
 	}
-	split_buffer[j] = '\0';
-	return (split_buffer);
+	return (ret_str);
 }
 
-int	ft_current_line(char *buffer, char **buffered, char **saved)
-{
-	char	*buffered_temp;
-	char	*split_temp;
-	int		boolcl;
-
-	boolcl = 0;
-	buffered_temp = ft_strdup(*buffered);
-	free(*buffered);
-	if (ft_strchr(buffer, '\n') == NULL)
-		*buffered = ft_strjoin(buffered_temp, buffer);
-	else
-	{
-		split_temp = ft_mini_split(buffer);
-		*saved = ft_strdup(ft_strchr(buffer, '\n') + 1);
-		*buffered = ft_strjoin(buffered_temp, split_temp);
-		free(split_temp);
-		boolcl = 1;
-	}
-	free(buffered_temp);
-	return (boolcl);
-}
-
-void	ft_strjoin_saved(char **saved, char **buffer)
+char	*ft_current_line(char **buffer, char *current_buffer, char **remain)
 {
 	char	*buffer_temp;
+	char	*has_nline;
+	char	*split_nline_temp;
 
 	buffer_temp = ft_strdup(*buffer);
 	free(*buffer);
-	*buffer = ft_strjoin(*saved, buffer_temp);
-	free(*saved);
+	has_nline = ft_strchr(current_buffer, '\n');
+	if (!has_nline)
+		*buffer = ft_strjoin(buffer_temp, current_buffer);
+	else
+	{
+		*remain = ft_strdup(has_nline + 1);
+		split_nline_temp = ft_split_nline(current_buffer, &has_nline);
+		*buffer = ft_strjoin(buffer_temp, split_nline_temp);
+		free(split_nline_temp);
+	}
 	free(buffer_temp);
-	*saved = NULL;
+	return (*remain);
+}
+
+size_t	ft_remain_join(char **remain, char **buffer)
+{
+	char	*temp_remain;
+	char	*has_nline;
+
+	if (*remain == NULL)
+		*buffer = ft_strdup("");
+	else
+	{
+		temp_remain = ft_strdup(*remain);
+		free(*remain);
+		*remain = NULL;
+		has_nline = ft_strchr(temp_remain, '\n');
+		if (!has_nline)
+		{
+			*buffer = ft_strdup(temp_remain);
+			free(temp_remain);
+		}
+		else
+		{
+			*remain = ft_strdup(has_nline + 1);
+			*buffer = ft_split_nline(temp_remain, &has_nline);
+			free(temp_remain);
+			return (0);
+		}
+	}
+	return (1);
+}
+
+void	ft_gnl_aux(char **buffer, char **current_buffer)
+{
+	if (ft_strlen(*buffer) == 0)
+	{
+		free(*buffer);
+		*buffer = NULL;
+	}
+	free(*current_buffer);
 }
 
 char	*get_next_line(int fd)
 {
-	static char	*saved;
+	static char	*remain;
+	char		*current_buffer;
 	char		*buffer;
-	char		*buffered;
+	size_t		len_buffer;
 
-	buffered = ft_strdup("");
-	if (fd < 0 || BUFFER_SIZE <= 0)
+	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, NULL, 0) != 0)
 		return (NULL);
-	buffer = ft_memset(malloc(BUFFER_SIZE + 1), 0, BUFFER_SIZE + 1);
-	if (buffer == NULL)
+	current_buffer = ft_memset(malloc(BUFFER_SIZE + 1), 0, BUFFER_SIZE + 1);
+	len_buffer = ft_remain_join(&remain, &buffer);
+	if (current_buffer == NULL || buffer == NULL)
 		return (NULL);
-	while (read(fd, buffer, BUFFER_SIZE) != 0)
+	while (len_buffer > 0 && remain == NULL)
 	{
-		if (saved != NULL)
-			ft_strjoin_saved(&saved, &buffer);
-		if (ft_current_line(buffer, &buffered, &saved))
-		{
-			free(buffer);
-			return (buffered);
-		}
+		len_buffer = read(fd, current_buffer, BUFFER_SIZE);
+		if (len_buffer < BUFFER_SIZE)
+			ft_memset(&current_buffer[len_buffer], 0, BUFFER_SIZE - len_buffer);
+		if (len_buffer > 0)
+			remain = ft_current_line(&buffer, current_buffer, &remain);
 	}
-	free(saved);
-	saved = NULL;
-	free(buffer);
-	free(buffered);
-	return (NULL);
+	ft_gnl_aux(&buffer, &current_buffer);
+	return (buffer);
 }
