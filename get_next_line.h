@@ -6,7 +6,7 @@
 /*   By: akenji-a <akenji-a@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/30 20:21:16 by akenji-a          #+#    #+#             */
-/*   Updated: 2022/04/01 20:19:59 by akenji-a         ###   ########.fr       */
+/*   Updated: 2022/04/14 21:28:11 by akenji-a         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 
 # include <unistd.h>
 # include <stdlib.h>
-# include <string.h>
 
 char	*get_next_line(int fd);
 char	*ft_strchr(const char *str, int c);
